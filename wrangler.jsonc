@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "defi-onekey-be",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  }
+  // 环境变量在 .dev.vars (本地) 或 Cloudflare Dashboard (生产) 中配置
+  // ZERION_API_KEY=your_api_key
+}
