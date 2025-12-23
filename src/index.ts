@@ -19,18 +19,34 @@ app.use('*', logger());
 // JSON 美化
 app.use('*', prettyJSON());
 
-// CORS 配置
+// CORS 配置 - 支持动态 origin 验证
 app.use('*', cors({
-  origin: [
-    // 本地开发
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    // 生产环境
-    'https://defi-onekey.qa.onekey-internal.com',
-    'https://defi.qa.onekey-internal.com',
-  ],
+  origin: (origin) => {
+    // 允许的域名列表
+    const allowedOrigins = [
+      // 本地开发
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'https://defi-compare.qa.onekey-internal.com',
+      'https://defi.qa.onekey-internal.com',
+      'https://defi-backend.qa.onekey-internal.com',
+    ];
+
+    // 检查是否在允许列表中
+    if (allowedOrigins.includes(origin)) {
+      return origin;
+    }
+
+    // 允许所有 *.onekey-internal.com 子域名
+    if (origin && origin.endsWith('.onekey-internal.com')) {
+      return origin;
+    }
+
+    // 不匹配时返回第一个允许的 origin（用于没有 origin 的请求）
+    return allowedOrigins[0];
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposeHeaders: ['Content-Length', 'X-Request-Id'],
