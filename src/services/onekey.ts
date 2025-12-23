@@ -428,7 +428,10 @@ export async function getAddressDefiData(
   console.log(`[OneKey] Found ${allOnekeyPositions.length} positions`);
 
   // 转换为统一格式
-  const positions = allOnekeyPositions.map((pos, index) => transformPosition(pos, index));
+  let positions = allOnekeyPositions.map((pos, index) => transformPosition(pos, index));
+
+  // 按法币价值倒序排序（与 Zerion 保持一致）
+  positions = positions.sort((a, b) => b.totalValueUSD - a.totalValueUSD);
 
   // 计算总值
   const totalValueUSD = positions.reduce((sum, p) => sum + p.totalValueUSD, 0);
