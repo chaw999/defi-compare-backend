@@ -54,11 +54,14 @@ async function fetchPortfolio(address: string, apiKey: string): Promise<{ totalV
 }
 
 /**
- * 获取所有 Positions
+ * 获取 DeFi Positions（仅复杂仓位，排除钱包代币）
+ * 使用 filter[positions]=only_complex 参数
  */
-async function fetchPositions(address: string, apiKey: string): Promise<Position[]> {
+async function fetchPositions(address: string, apiKey: string, onlyComplex: boolean = true): Promise<Position[]> {
+  // 根据参数决定是否过滤
+  const filterParam = onlyComplex ? '&filter[positions]=only_complex' : '';
   const response = await fetch(
-    `${ZERION_API_BASE}/wallets/${address}/positions?currency=usd&sort=value`,
+    `${ZERION_API_BASE}/wallets/${address}/positions?currency=usd&sort=value${filterParam}`,
     { headers: getHeaders(apiKey) }
   );
 
@@ -133,21 +136,33 @@ function extractChains(positions: Position[]): string[] {
 
 /**
  * 获取地址的完整 DeFi 数据
+ * @param address 钱包地址
+ * @param apiKey Zerion API Key
+ * @param onlyComplex 是否只获取 DeFi 仓位（排除钱包代币），默认 true
  */
-export async function getAddressDefiData(address: string, apiKey: string): Promise<AddressDefiData> {
+export async function getAddressDefiData(
+  address: string, 
+  apiKey: string,
+  onlyComplex: boolean = true
+): Promise<AddressDefiData> {
   const normalizedAddress = address.toLowerCase();
 
   const [portfolio, positions] = await Promise.all([
     fetchPortfolio(normalizedAddress, apiKey),
-    fetchPositions(normalizedAddress, apiKey),
+    fetchPositions(normalizedAddress, apiKey, onlyComplex),
   ]);
 
   // 提取所有涉及的链
   const chains = extractChains(positions);
 
+  // 对于 only_complex，重新计算总值（因为 portfolio 包含所有资产）
+  const calculatedTotalValue = positions.reduce((sum, p) => sum + p.totalValueUSD, 0);
+
+  console.log(`[Zerion] Found ${positions.length} ${onlyComplex ? 'DeFi' : 'all'} positions, total value: $${calculatedTotalValue.toFixed(2)}`);
+
   return {
     address: normalizedAddress,
-    totalValueUSD: portfolio.totalValueUSD,
+    totalValueUSD: calculatedTotalValue,  // 使用计算后的总值
     positions,
     chains,
     lastUpdated: new Date().toISOString(),

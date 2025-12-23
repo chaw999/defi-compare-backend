@@ -2,19 +2,42 @@
 
 基于 Cloudflare Workers + Hono 的 DeFi 数据对比 API 服务。
 
+对比 Zerion 和 OneKey Portfolio API 的数据差异，参考 [Zerion vs OneKey API 字段比對分析](https://github.com/OneKeyHQ/server-service-onchain/docs/features/defi-portfolio/attachments/zerion-onekey-api-comparison.md)。
+
 ## 项目结构
 
 ```
 src/
-├── index.ts          # Worker 入口，中间件配置
-├── types.ts          # TypeScript 类型定义
+├── index.ts              # Worker 入口，中间件配置
+├── types.ts              # TypeScript 类型定义
 ├── routes/
-│   └── defi.ts       # DeFi 相关 API 路由
+│   └── defi.ts           # DeFi 相关 API 路由
 └── services/
-    ├── zerion.ts     # Zerion API 服务
-    ├── onekey.ts     # OneKey 数据源服务 (待实现)
-    └── compare.ts    # 数据源对比服务
+    ├── zerion.ts         # Zerion API 服务
+    ├── onekey.ts         # OneKey Portfolio API 服务
+    └── compare.ts        # 数据源对比服务
 ```
+
+## 数据源对比逻辑
+
+根据文档，对比逻辑如下：
+
+1. **Position 匹配**：使用 `protocol + chain + token symbol` 作为匹配 key
+2. **金额计算**：`netWorth = totalValue + totalReward - totalDebt`
+3. **差异阈值**：差异超过 1% 认为有变化
+4. **链范围对齐**：先查询 Zerion，获取链列表后再查询 OneKey 对应的链
+
+### 网络 ID 映射
+
+| OneKey networkId | Zerion chain |
+|------------------|--------------|
+| `evm--1` | ethereum |
+| `evm--42161` | arbitrum |
+| `evm--10` | optimism |
+| `evm--8453` | base |
+| `evm--137` | polygon |
+| `evm--56` | binance-smart-chain |
+| ... | ... |
 
 ## 开发
 
@@ -26,10 +49,11 @@ yarn install
 
 ### 2. 配置环境变量
 
-复制 `.dev.vars.example` 到 `.dev.vars` 并填入你的 API Key：
+复制 `.dev.vars.example` 到 `.dev.vars` 并填入你的 API Keys：
 
 ```
 ZERION_API_KEY=your_zerion_api_key_here
+ONEKEY_AUTH_TOKEN=your_onekey_auth_token_here
 ```
 
 ### 3. 本地开发
@@ -61,7 +85,9 @@ yarn deploy
 1. 进入 Workers & Pages
 2. 选择 `defi-onekey-be` Worker
 3. 进入 Settings > Variables
-4. 添加 `ZERION_API_KEY` 变量
+4. 添加以下变量：
+   - `ZERION_API_KEY` - Zerion API 密钥
+   - `ONEKEY_AUTH_TOKEN` - OneKey Portfolio API 的 Bearer Token
 
 ## API 端点
 
@@ -79,8 +105,9 @@ yarn deploy
 
 - `http://localhost:3000` (前端开发)
 - `http://localhost:5173` (Vite 默认端口)
-- `https://defi-onekey.qa.onekey-internal.com` (生产前端)
+- `https://defi-compare.qa.onekey-internal.com` (生产前端)
 - `https://defi.qa.onekey-internal.com` (生产前端)
+- 所有 `*.onekey-internal.com` 子域名
 
 ## 技术栈
 
@@ -88,3 +115,8 @@ yarn deploy
 - **Framework**: Hono
 - **Language**: TypeScript
 - **Build Tool**: Wrangler
+
+## 参考文档
+
+- [Zerion API Documentation](https://developers.zerion.io/)
+- [Zerion vs OneKey API 字段比對分析](https://github.com/OneKeyHQ/server-service-onchain/docs/features/defi-portfolio/attachments/zerion-onekey-api-comparison.md)

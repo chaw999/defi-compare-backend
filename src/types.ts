@@ -3,6 +3,7 @@
  */
 export interface Env {
   ZERION_API_KEY: string;
+  ONEKEY_AUTH_TOKEN: string;
 }
 
 /**

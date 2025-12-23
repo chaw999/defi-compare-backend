@@ -1,5 +1,9 @@
 # Cloudflare Workers 本地开发环境变量
-# 复制此文件为 .dev.vars 并填入你的 API Key
+# 复制此文件为 .dev.vars 并填入你的 API Keys
 
+# Zerion API Key
 ZERION_API_KEY=your_zerion_api_key_here
 
+# OneKey Portfolio API Auth Token
+# 从 OneKey 获取的 Bearer Token
+ONEKEY_AUTH_TOKEN=your_onekey_auth_token_here
